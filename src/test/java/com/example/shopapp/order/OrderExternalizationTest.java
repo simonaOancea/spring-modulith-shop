@@ -2,6 +2,7 @@ package com.example.shopapp.order;
 
 import com.example.shopapp.TestContainersConfiguration;
 import com.example.shopapp.catalog.CatalogService;
+import com.example.shopapp.order.internal.MockPaymentConfig;
 import com.example.shopapp.catalog.ProductInfo;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -12,7 +13,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
-import org.testcontainers.containers.KafkaContainer;
+import org.testcontainers.kafka.KafkaContainer;
 
 import java.math.BigDecimal;
 import java.time.Duration;
@@ -22,8 +23,8 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@SpringBootTest
-@Import(TestContainersConfiguration.class)
+@SpringBootTest(properties = "shop.payment-gateway.enabled=false")
+@Import({TestContainersConfiguration.class, MockPaymentConfig.class})
 class OrderExternalizationTest {
 
     @Autowired
@@ -53,10 +54,16 @@ class OrderExternalizationTest {
                 if (!records.isEmpty()) break;
             }
 
-            assertThat(records).isNotEmpty();
-            ConsumerRecord<String, String> record = records.iterator().next();
-            assertThat(record.value()).contains("productSku");
-            assertThat(record.value()).contains("KFK-001");
+            // Consume all records — other tests may have externalized events to the same topic
+            boolean found = false;
+            for (ConsumerRecord<String, String> record : records) {
+                if (record.value().contains("KFK-001")) {
+                    assertThat(record.value()).contains("productSku");
+                    found = true;
+                    break;
+                }
+            }
+            assertThat(found).as("Expected event with KFK-001 on Kafka topic").isTrue();
         }
     }
 

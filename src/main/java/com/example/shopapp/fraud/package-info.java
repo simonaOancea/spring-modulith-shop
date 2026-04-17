@@ -1,4 +1,4 @@
 @org.springframework.modulith.ApplicationModule(
-    allowedDependencies = { "order" }
+    allowedDependencies = { "order :: events" }
 )
 package com.example.shopapp.fraud;

@@ -1,4 +1,4 @@
-package com.example.shopapp.order;
+package com.example.shopapp.order.events;
 
 import org.springframework.modulith.events.Externalized;
 

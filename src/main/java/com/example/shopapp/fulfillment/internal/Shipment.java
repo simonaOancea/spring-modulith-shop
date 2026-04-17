@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 import java.time.Instant;
 
 @Entity
-@Table(name = "shipments")
+@Table(name = "shipments", schema = "fulfillment")
 @Getter
 @NoArgsConstructor
 public class Shipment {
@@ -39,7 +39,11 @@ public class Shipment {
         this.status = ShipmentStatus.DISPATCHED;
     }
 
+    public void cancel() {
+        this.status = ShipmentStatus.CANCELLED;
+    }
+
     public enum ShipmentStatus {
-        PENDING, DISPATCHED
+        PENDING, DISPATCHED, CANCELLED
     }
 }

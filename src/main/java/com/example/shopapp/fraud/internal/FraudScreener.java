@@ -1,6 +1,6 @@
 package com.example.shopapp.fraud.internal;
 
-import com.example.shopapp.order.OrderInitiated;
+import com.example.shopapp.order.events.OrderInitiated;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.modulith.events.ApplicationModuleListener;

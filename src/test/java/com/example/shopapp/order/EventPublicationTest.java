@@ -2,6 +2,7 @@ package com.example.shopapp.order;
 
 import com.example.shopapp.TestContainersConfiguration;
 import com.example.shopapp.catalog.CatalogService;
+import com.example.shopapp.order.internal.MockPaymentConfig;
 import com.example.shopapp.catalog.ProductInfo;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,8 +16,8 @@ import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@SpringBootTest
-@Import(TestContainersConfiguration.class)
+@SpringBootTest(properties = "shop.payment-gateway.enabled=false")
+@Import({TestContainersConfiguration.class, MockPaymentConfig.class})
 class EventPublicationTest {
 
     @Autowired

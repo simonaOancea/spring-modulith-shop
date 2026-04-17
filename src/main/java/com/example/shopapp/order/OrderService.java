@@ -17,4 +17,8 @@ public class OrderService {
             return processor.fail(customerEmail, productSku, quantity, e.getMessage());
         }
     }
+
+    public OrderResult cancelOrder(Long orderId) {
+        return processor.cancel(orderId);
+    }
 }

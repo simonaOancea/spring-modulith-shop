@@ -2,9 +2,10 @@ package com.example.shopapp.order.internal;
 
 import com.example.shopapp.catalog.CatalogService;
 import com.example.shopapp.catalog.ProductInfo;
-import com.example.shopapp.order.OrderCompleted;
-import com.example.shopapp.order.OrderFailed;
-import com.example.shopapp.order.OrderInitiated;
+import com.example.shopapp.order.events.OrderCancelled;
+import com.example.shopapp.order.events.OrderCompleted;
+import com.example.shopapp.order.events.OrderFailed;
+import com.example.shopapp.order.events.OrderInitiated;
 import com.example.shopapp.order.OrderResult;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,6 +22,7 @@ public class OrderProcessor {
 
     private final OrderRepository orders;
     private final CatalogService catalogService;
+    private final PaymentGatewayClient paymentGateway;
     private final ApplicationEventPublisher events;
 
     @Transactional
@@ -36,6 +38,31 @@ public class OrderProcessor {
 
         // Reserve stock — throws if insufficient
         catalogService.reserveStock(productSku, quantity);
+
+        // Charge payment via external gateway
+        try {
+            PaymentResponse payment = paymentGateway.charge(
+                    new PaymentRequest(order.getId().toString(), customerEmail, totalAmount));
+
+            if (!payment.isApproved()) {
+                catalogService.releaseStock(productSku, quantity);
+                order.fail();
+                orders.save(order);
+                String reason = "Payment declined: " + payment.declineReason();
+                log.warn("Order #{} failed: {}", order.getId(), reason);
+                events.publishEvent(new OrderFailed(order.getId(), productSku, quantity, totalAmount, reason));
+                return new OrderResult(order.getId(), productSku, quantity, totalAmount, "FAILED");
+            }
+        } catch (Exception e) {
+            catalogService.releaseStock(productSku, quantity);
+            order.fail();
+            orders.save(order);
+            String reason = "Payment error: " + e.getMessage();
+            log.warn("Order #{} failed: {}", order.getId(), reason);
+            events.publishEvent(new OrderFailed(order.getId(), productSku, quantity, totalAmount, reason));
+            return new OrderResult(order.getId(), productSku, quantity, totalAmount, "FAILED");
+        }
+
         order.complete();
         orders.save(order);
 
@@ -62,5 +89,25 @@ public class OrderProcessor {
         events.publishEvent(new OrderFailed(order.getId(), productSku, quantity, totalAmount, reason));
 
         return new OrderResult(order.getId(), productSku, quantity, totalAmount, "FAILED");
+    }
+
+    @Transactional
+    public OrderResult cancel(Long orderId) {
+        Order order = orders.findById(orderId)
+                .orElseThrow(() -> new IllegalArgumentException("Order not found: " + orderId));
+
+        order.cancel();
+        orders.save(order);
+
+        // Release the reserved stock back to catalog
+        catalogService.releaseStock(order.getProductSku(), order.getQuantity());
+
+        log.info("Order #{} cancelled, released {} x{}", orderId, order.getProductSku(), order.getQuantity());
+        events.publishEvent(new OrderCancelled(
+                order.getId(), order.getProductSku(), order.getQuantity(),
+                order.getTotalAmount(), order.getCustomerEmail()));
+
+        return new OrderResult(order.getId(), order.getProductSku(), order.getQuantity(),
+                order.getTotalAmount(), "CANCELLED");
     }
 }

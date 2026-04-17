@@ -1,7 +1,7 @@
 package com.example.shopapp.fulfillment;
 
 import com.example.shopapp.TestContainersConfiguration;
-import com.example.shopapp.order.OrderCompleted;
+import com.example.shopapp.order.events.OrderCompleted;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Import;

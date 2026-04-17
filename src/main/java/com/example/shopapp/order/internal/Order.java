@@ -8,7 +8,7 @@ import java.math.BigDecimal;
 import java.time.Instant;
 
 @Entity
-@Table(name = "orders")
+@Table(name = "orders", schema = "orders")
 @Getter
 @NoArgsConstructor
 public class Order {
@@ -44,7 +44,14 @@ public class Order {
         this.status = OrderStatus.FAILED;
     }
 
+    public void cancel() {
+        if (this.status != OrderStatus.COMPLETED) {
+            throw new IllegalStateException("Only completed orders can be cancelled, current status: " + status);
+        }
+        this.status = OrderStatus.CANCELLED;
+    }
+
     public enum OrderStatus {
-        INITIATED, COMPLETED, FAILED
+        INITIATED, COMPLETED, FAILED, CANCELLED
     }
 }

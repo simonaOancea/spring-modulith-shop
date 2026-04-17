@@ -1,6 +1,7 @@
 package com.example.shopapp.fulfillment.internal;
 
 import com.example.shopapp.fulfillment.ShipmentDispatched;
+import com.example.shopapp.fulfillment.ShipmentWithProduct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
@@ -15,6 +16,7 @@ import java.util.List;
 public class FulfillmentService {
 
     private final ShipmentRepository shipments;
+    private final CatalogProductViewRepository catalogProductViews;
     private final ApplicationEventPublisher events;
 
     @Transactional
@@ -35,5 +37,20 @@ public class FulfillmentService {
     @Transactional(readOnly = true)
     public List<Shipment> getShipmentsByOrder(Long orderId) {
         return shipments.findByOrderId(orderId);
+    }
+
+    @Transactional(readOnly = true)
+    public List<ShipmentWithProduct> getShipmentReport(Long orderId) {
+        List<Shipment> orderShipments = shipments.findByOrderId(orderId);
+        return orderShipments.stream()
+                .map(shipment -> {
+                    String productName = catalogProductViews.findBySku(shipment.getProductSku())
+                            .map(CatalogProductView::getName)
+                            .orElse("Unknown");
+                    return new ShipmentWithProduct(
+                            shipment.getId(), shipment.getOrderId(), shipment.getProductSku(),
+                            productName, shipment.getQuantity(), shipment.getStatus().name());
+                })
+                .toList();
     }
 }

@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 import java.time.Instant;
 
 @Entity
-@Table(name = "fraud_checks")
+@Table(name = "fraud_checks", schema = "fraud")
 @Getter
 @NoArgsConstructor
 public class FraudCheck {

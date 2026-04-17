@@ -1,10 +1,13 @@
 package com.example.shopapp.fulfillment.internal;
 
-import com.example.shopapp.order.OrderCompleted;
+import com.example.shopapp.order.events.OrderCancelled;
+import com.example.shopapp.order.events.OrderCompleted;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.modulith.events.ApplicationModuleListener;
 import org.springframework.stereotype.Component;
+
+import java.util.List;
 
 @Component
 @RequiredArgsConstructor
@@ -25,5 +28,18 @@ class FulfillmentProcessor {
 
         log.info("Shipment created for order #{}: {} x{} for {}",
                 event.orderId(), event.productSku(), event.quantity(), event.customerEmail());
+    }
+
+    @ApplicationModuleListener
+    void on(OrderCancelled event) {
+        List<Shipment> orderShipments = shipments.findByOrderId(event.orderId());
+
+        for (Shipment shipment : orderShipments) {
+            if (shipment.getStatus() == Shipment.ShipmentStatus.PENDING) {
+                shipment.cancel();
+                shipments.save(shipment);
+                log.info("Shipment #{} cancelled for order #{}", shipment.getId(), event.orderId());
+            }
+        }
     }
 }
