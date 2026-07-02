@@ -18,6 +18,11 @@ class DemoDataSeeder {
     @Bean
     ApplicationRunner seedDemoData(CatalogService catalogService) {
         return args -> {
+            if (catalogService.findProduct("LAP-001").isPresent()) {
+                log.info("Demo products already present — skipping seed");
+                return;
+            }
+
             ProductInfo laptop = catalogService.registerProduct(
                     "Laptop Pro 16", "LAP-001", new BigDecimal("1299.99"), 50);
 

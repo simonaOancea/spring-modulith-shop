@@ -15,7 +15,7 @@
     <artifactId>shop-app</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <name>Spring Modulith Shop Demo</name>
-    <description>E-commerce demo for "The Architecture Decision You Can Revert" tech talk</description>
+    <description>E-commerce demo for "The Architecture Decision You Can Undo" tech talk</description>
 
     <properties>
         <java.version>25</java.version>
@@ -23,6 +23,7 @@
         <spring-cloud.version>2025.1.1</spring-cloud.version>
         <testcontainers.version>2.0.4</testcontainers.version>
         <lombok.version>1.18.40</lombok.version>
+        <p6spy.version>3.9.1</p6spy.version>
     </properties>
 
     <dependencyManagement>
@@ -124,6 +125,13 @@
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
             <scope>runtime</scope>
+        </dependency>
+
+        <!-- P6Spy — demo-only runtime SQL inspection (cross-schema JOIN guard) -->
+        <dependency>
+            <groupId>p6spy</groupId>
+            <artifactId>p6spy</artifactId>
+            <version>${p6spy.version}</version>
         </dependency>
 
         <!-- Lombok -->

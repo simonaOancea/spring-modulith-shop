@@ -15,9 +15,15 @@ import java.util.List;
 class FulfillmentProcessor {
 
     private final ShipmentRepository shipments;
+    private final FulfillmentProperties demoProperties;
 
     @ApplicationModuleListener
     void on(OrderCompleted event) {
+        if (demoProperties.shouldFailNow()) {
+            log.warn("DEMO: failing OrderCompleted listener for order #{} — its outbox row stays incomplete", event.orderId());
+            throw new IllegalStateException("Simulated fulfillment failure for outbox demo (order #" + event.orderId() + ")");
+        }
+
         Shipment shipment = new Shipment(
                 event.orderId(),
                 event.customerEmail(),

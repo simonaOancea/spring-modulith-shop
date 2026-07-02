@@ -1,6 +1,6 @@
 # Spring Modulith Shop
 
-Demo project for the tech talk **"The Architecture Decision You Can Revert"** — a modular monolith e-commerce application built with Spring Modulith.
+Demo project for the tech talk **"The Architecture Decision You Can Undo"** — a modular monolith e-commerce application built with Spring Modulith.
 
 ## What This Demonstrates
 

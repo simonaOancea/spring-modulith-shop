@@ -15,6 +15,10 @@ import java.math.BigDecimal;
  * 1. Direct service call: order -> catalog (creates code coupling, used when write access needed)
  * 2. Database VIEW: fulfillment -> catalog.products via @Subselect (read-only, no code coupling)
  * 3. Event-carried state: OrderCompleted carries productSku, quantity, etc. (most decoupled)
+ *
+ * This is data-decoupling Level 3 (schema-per-module + @Subselect read): it crosses a schema
+ * boundary but creates zero code coupling and stays a single-table read — so the P6Spy
+ * cross-schema guard (demo profile) correctly lets it through.
  */
 @Entity
 @Immutable

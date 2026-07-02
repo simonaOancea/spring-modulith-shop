@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -30,10 +31,19 @@ public class CatalogService {
     }
 
     @Transactional(readOnly = true)
+    public Optional<ProductInfo> findProduct(String sku) {
+        return products.findBySku(sku)
+                .map(product -> new ProductInfo(
+                        product.getSku(),
+                        product.getName(),
+                        product.getPrice(),
+                        product.getStock()));
+    }
+
+    @Transactional(readOnly = true)
     public ProductInfo getProduct(String sku) {
-        Product product = products.findBySku(sku)
+        return findProduct(sku)
                 .orElseThrow(() -> new IllegalArgumentException("Product not found: " + sku));
-        return new ProductInfo(product.getSku(), product.getName(), product.getPrice(), product.getStock());
     }
 
     @Transactional
