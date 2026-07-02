@@ -1,6 +1,7 @@
 package com.example.shopapp.fulfillment;
 
 import com.example.shopapp.TestContainersConfiguration;
+import com.example.shopapp.fulfillment.internal.FulfillmentService;
 import com.example.shopapp.order.events.OrderCompleted;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,7 +18,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class FulfillmentModuleIntegrationTest {
 
     @Autowired
-    private com.example.shopapp.fulfillment.internal.FulfillmentService fulfillmentService;
+    private FulfillmentService fulfillmentService;
 
     @Test
     void orderCompletedCreatesShipment(Scenario scenario) {

@@ -20,7 +20,6 @@
     <properties>
         <java.version>25</java.version>
         <spring-modulith.version>2.0.5</spring-modulith.version>
-        <spring-cloud.version>2025.1.1</spring-cloud.version>
         <testcontainers.version>2.0.4</testcontainers.version>
         <lombok.version>1.18.40</lombok.version>
         <p6spy.version>3.9.1</p6spy.version>
@@ -32,13 +31,6 @@
                 <groupId>org.springframework.modulith</groupId>
                 <artifactId>spring-modulith-bom</artifactId>
                 <version>${spring-modulith.version}</version>
-                <scope>import</scope>
-                <type>pom</type>
-            </dependency>
-            <dependency>
-                <groupId>org.springframework.cloud</groupId>
-                <artifactId>spring-cloud-dependencies</artifactId>
-                <version>${spring-cloud.version}</version>
                 <scope>import</scope>
                 <type>pom</type>
             </dependency>
@@ -62,6 +54,13 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
+        <!-- Boot 4 modularization: RestClient + HTTP Interface client auto-configuration is
+             opt-in and no longer part of starter-web. Without this, @ImportHttpServices groups
+             get no base-url/timeouts from spring.http.serviceclient.* properties. -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-restclient</artifactId>
+        </dependency>
 
         <!-- Spring Modulith -->
         <dependency>
@@ -71,12 +70,6 @@
         <dependency>
             <groupId>org.springframework.modulith</groupId>
             <artifactId>spring-modulith-starter-jpa</artifactId>
-        </dependency>
-
-        <!-- Spring Cloud OpenFeign -->
-        <dependency>
-            <groupId>org.springframework.cloud</groupId>
-            <artifactId>spring-cloud-starter-openfeign</artifactId>
         </dependency>
 
         <!-- Kafka + Event Externalization -->
@@ -116,8 +109,8 @@
             <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
         <dependency>
-            <groupId>io.micrometer</groupId>
-            <artifactId>micrometer-tracing-bridge-otel</artifactId>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-opentelemetry</artifactId>
         </dependency>
 
         <!-- Database -->

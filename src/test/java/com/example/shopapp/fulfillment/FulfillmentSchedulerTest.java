@@ -1,6 +1,8 @@
 package com.example.shopapp.fulfillment;
 
 import com.example.shopapp.TestContainersConfiguration;
+import com.example.shopapp.fulfillment.internal.FulfillmentService;
+import com.example.shopapp.fulfillment.internal.Shipment;
 import com.example.shopapp.order.events.OrderCompleted;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,7 +26,7 @@ class FulfillmentSchedulerTest {
     private TimeMachine timeMachine;
 
     @Autowired
-    private com.example.shopapp.fulfillment.internal.FulfillmentService fulfillmentService;
+    private FulfillmentService fulfillmentService;
 
     @Test
     void dayHasPassedTriggersShipmentDispatch(Scenario scenario) {
@@ -34,9 +36,11 @@ class FulfillmentSchedulerTest {
                 .andVerify(shipments -> assertThat(shipments).isNotEmpty());
 
         // When: a day passes (TimeMachine triggers DayHasPassed)
-        timeMachine.shiftBy(Duration.ofDays(1));
-
-        // Then: the scheduler ran (we got here without exceptions)
-        assertThat(fulfillmentService.getShipmentsByOrder(1L)).isNotEmpty();
+        // Then: the scheduler dispatches the pending shipment
+        scenario.stimulate(() -> timeMachine.shiftBy(Duration.ofDays(1)))
+                .andWaitForStateChange(() -> fulfillmentService.getShipmentsByOrder(1L).stream()
+                        .filter(shipment -> shipment.getStatus() == Shipment.ShipmentStatus.DISPATCHED)
+                        .toList())
+                .andVerify(dispatched -> assertThat(dispatched).isNotEmpty());
     }
 }

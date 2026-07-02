@@ -25,6 +25,13 @@ public class OrderProcessor {
     private final PaymentGatewayClient paymentGateway;
     private final ApplicationEventPublisher events;
 
+    // DEMO (cycle): uncomment this field and the call at the end of execute(), and set
+    // order/package-info.java to allowedDependencies = { "catalog", "notification" }.
+    // verify() then reports a CYCLE — order -> notification -> order — because notification
+    // already listens to order :: events. The fix is deleting the sync call again: the
+    // OrderCompleted event published below drives the same confirmation, in one direction.
+    // private final com.example.shopapp.notification.NotificationService notificationService;
+
     @Transactional
     public OrderResult execute(String customerEmail, String productSku, int quantity) {
         ProductInfo product = catalogService.getProduct(productSku);
@@ -68,6 +75,9 @@ public class OrderProcessor {
 
         log.info("Order #{} completed, total {}", order.getId(), totalAmount);
         events.publishEvent(new OrderCompleted(order.getId(), productSku, quantity, totalAmount, customerEmail));
+
+        // DEMO (cycle): the direct-call version of the confirmation — see the field above.
+        // notificationService.sendOrderConfirmation(customerEmail, order.getId());
 
         return new OrderResult(order.getId(), productSku, quantity, totalAmount, "COMPLETED");
     }

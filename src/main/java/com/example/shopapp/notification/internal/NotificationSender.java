@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 @Slf4j
-class NotificationSender {
+public class NotificationSender {
 
     @ApplicationModuleListener
     void on(ProductRegistered event) {
@@ -18,13 +18,16 @@ class NotificationSender {
 
     @ApplicationModuleListener
     void on(OrderCompleted event) {
-        log.info("Sending order confirmation to {} for order #{}",
-                event.customerEmail(), event.orderId());
+        sendOrderConfirmation(event.customerEmail(), event.orderId());
     }
 
     @ApplicationModuleListener
     void on(OrderCancelled event) {
         log.info("Sending cancellation notice to {} for order #{}",
                 event.customerEmail(), event.orderId());
+    }
+
+    public void sendOrderConfirmation(String customerEmail, Long orderId) {
+        log.info("Sending order confirmation to {} for order #{}", customerEmail, orderId);
     }
 }

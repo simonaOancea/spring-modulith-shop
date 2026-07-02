@@ -16,7 +16,8 @@ import org.springframework.stereotype.Component;
  *   Allowed targets: catalog, order :: events.
  *
  * This is an *illegal dependency*, not a cycle — notification reaches somewhere it isn't
- * allowed, but fulfillment does not depend back on notification. (Contrast CycleExample.)
+ * allowed, but fulfillment does not depend back on notification. (Contrast the cycle demo
+ * in order/internal/OrderProcessor.)
  */
 @Component
 class BoundaryViolationExample {

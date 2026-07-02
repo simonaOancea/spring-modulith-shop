@@ -1,12 +1,12 @@
 package com.example.shopapp.order.internal;
 
-import org.springframework.cloud.openfeign.FeignClient;
-import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.service.annotation.HttpExchange;
+import org.springframework.web.service.annotation.PostExchange;
 
-@FeignClient(name = "payment-gateway", url = "${shop.payment-gateway.base-url}")
+@HttpExchange
 public interface PaymentGatewayClient {
 
-    @PostMapping("/api/payments/charge")
+    @PostExchange("/api/payments/charge")
     PaymentResponse charge(@RequestBody PaymentRequest request);
 }

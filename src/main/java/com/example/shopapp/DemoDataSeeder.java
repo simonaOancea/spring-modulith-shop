@@ -3,10 +3,12 @@ package com.example.shopapp;
 import com.example.shopapp.catalog.CatalogService;
 import com.example.shopapp.catalog.ProductInfo;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.kafka.clients.admin.NewTopic;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
+import org.springframework.kafka.config.TopicBuilder;
 
 import java.math.BigDecimal;
 
@@ -38,5 +40,16 @@ class DemoDataSeeder {
             log.info("Headphones: {} (price: {}, stock: {})", headphones.sku(), headphones.price(), headphones.stock());
             log.info("=============================");
         };
+    }
+
+    // Pre-create the externalization target so the first @Externalized publish doesn't stall
+    // on UNKNOWN_TOPIC_OR_PARTITION while broker-side auto-creation kicks in. Three partitions
+    // make the SKU-keyed routing (order-completed::#{#this.productSku()}) visible.
+    @Bean
+    NewTopic orderCompletedTopic() {
+        return TopicBuilder.name("order-completed")
+                .partitions(3)
+                .replicas(1)
+                .build();
     }
 }
