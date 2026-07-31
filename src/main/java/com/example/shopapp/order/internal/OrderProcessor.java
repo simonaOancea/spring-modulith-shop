@@ -53,21 +53,11 @@ public class OrderProcessor {
 
             if (!payment.isApproved()) {
                 catalogService.releaseStock(productSku, quantity);
-                order.fail();
-                orders.save(order);
-                String reason = "Payment declined: " + payment.declineReason();
-                log.warn("Order #{} failed: {}", order.getId(), reason);
-                events.publishEvent(new OrderFailed(order.getId(), productSku, quantity, totalAmount, reason));
-                return new OrderResult(order.getId(), productSku, quantity, totalAmount, "FAILED");
+                return failOrder(order, "Payment declined: " + payment.declineReason());
             }
         } catch (Exception e) {
             catalogService.releaseStock(productSku, quantity);
-            order.fail();
-            orders.save(order);
-            String reason = "Payment error: " + e.getMessage();
-            log.warn("Order #{} failed: {}", order.getId(), reason);
-            events.publishEvent(new OrderFailed(order.getId(), productSku, quantity, totalAmount, reason));
-            return new OrderResult(order.getId(), productSku, quantity, totalAmount, "FAILED");
+            return failOrder(order, "Payment error: " + e.getMessage());
         }
 
         order.complete();
@@ -92,13 +82,21 @@ public class OrderProcessor {
         }
 
         Order order = new Order(customerEmail, productSku, quantity, totalAmount);
+        return failOrder(order, reason);
+    }
+
+    // Shared failure tail: mark FAILED, log, publish OrderFailed, return the result.
+    // Callers release reserved stock themselves — only the payment branches have anything
+    // to compensate; after a rollback (OrderService -> fail) there is nothing to release.
+    private OrderResult failOrder(Order order, String reason) {
         order.fail();
         orders.save(order);
-
         log.warn("Order #{} failed: {}", order.getId(), reason);
-        events.publishEvent(new OrderFailed(order.getId(), productSku, quantity, totalAmount, reason));
-
-        return new OrderResult(order.getId(), productSku, quantity, totalAmount, "FAILED");
+        events.publishEvent(new OrderFailed(
+                order.getId(), order.getProductSku(), order.getQuantity(),
+                order.getTotalAmount(), reason));
+        return new OrderResult(order.getId(), order.getProductSku(), order.getQuantity(),
+                order.getTotalAmount(), "FAILED");
     }
 
     @Transactional
