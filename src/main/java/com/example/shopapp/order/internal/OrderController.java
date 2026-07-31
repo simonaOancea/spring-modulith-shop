@@ -20,7 +20,7 @@ class OrderController {
         OrderResult result = orderService.placeOrder(
                 request.customerEmail(), request.productSku(), request.quantity());
         if ("FAILED".equals(result.status())) {
-            return ResponseEntity.unprocessableEntity().body(result);
+            return ResponseEntity.unprocessableContent().body(result);
         }
         return ResponseEntity.ok(result);
     }
