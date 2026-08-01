@@ -17,6 +17,10 @@ class FulfillmentProcessor {
     private final ShipmentRepository shipments;
     private final FulfillmentProperties demoProperties;
 
+    // Outbox delivery is at-least-once: a crash between this listener's commit and the
+    // publication's completion mark redelivers the event. A production listener would be
+    // idempotent — e.g. first line: skip if a shipment for this orderId already exists.
+    // Left naive here to keep the demo beat legible; the gap is discussed in the talk.
     @ApplicationModuleListener
     void on(OrderCompleted event) {
         if (demoProperties.shouldFailNow()) {
