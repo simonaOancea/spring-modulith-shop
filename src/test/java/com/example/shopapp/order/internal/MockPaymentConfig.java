@@ -8,6 +8,6 @@ public class MockPaymentConfig {
 
     @Bean
     PaymentGatewayClient paymentGatewayClient() {
-        return request -> new PaymentResponse("txn-mock", "APPROVED", null);
+        return _ -> new PaymentResponse("txn-mock", "APPROVED", null);
     }
 }
