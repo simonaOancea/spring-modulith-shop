@@ -2,6 +2,7 @@ package com.example.shopapp.fulfillment.internal;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import lombok.Getter;
 import org.hibernate.annotations.Immutable;
 import org.hibernate.annotations.Subselect;
 
@@ -22,6 +23,7 @@ import java.math.BigDecimal;
  */
 @Entity
 @Immutable
+@Getter
 @Subselect("SELECT id, sku, name, price FROM catalog.products")
 public class CatalogProductView {
 
@@ -31,9 +33,4 @@ public class CatalogProductView {
     private String sku;
     private String name;
     private BigDecimal price;
-
-    public Long getId() { return id; }
-    public String getSku() { return sku; }
-    public String getName() { return name; }
-    public BigDecimal getPrice() { return price; }
 }
