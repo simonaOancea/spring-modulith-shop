@@ -20,18 +20,15 @@ public class FulfillmentService {
     private final ApplicationEventPublisher events;
 
     @Transactional
-    public ShipmentDispatched dispatchShipment(Long shipmentId) {
+    public void dispatchShipment(Long shipmentId) {
         Shipment shipment = shipments.findById(shipmentId)
                 .orElseThrow(() -> new IllegalArgumentException("Shipment not found: " + shipmentId));
         shipment.dispatch();
         shipments.save(shipment);
 
-        ShipmentDispatched dispatched = new ShipmentDispatched(
-                shipment.getId(), shipment.getOrderId(), shipment.getCustomerEmail());
-
         log.info("Dispatched shipment #{} for order #{}", shipmentId, shipment.getOrderId());
-        events.publishEvent(dispatched);
-        return dispatched;
+        events.publishEvent(new ShipmentDispatched(
+                shipment.getId(), shipment.getOrderId(), shipment.getCustomerEmail()));
     }
 
     @Transactional(readOnly = true)
