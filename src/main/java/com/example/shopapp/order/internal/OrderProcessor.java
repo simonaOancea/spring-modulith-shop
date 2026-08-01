@@ -74,12 +74,12 @@ public class OrderProcessor {
 
     @Transactional
     public OrderResult fail(String customerEmail, String productSku, int quantity, String reason) {
-        BigDecimal totalAmount = BigDecimal.ZERO;
-        try {
-            ProductInfo product = catalogService.getProduct(productSku);
-            totalAmount = product.price().multiply(BigDecimal.valueOf(quantity));
-        } catch (Exception ignored) {
-        }
+        // findProduct, not getProduct: an exception thrown through CatalogService's
+        // @Transactional proxy would mark THIS (joined) transaction rollback-only, and the
+        // commit of the FAILED order would then die with UnexpectedRollbackException.
+        BigDecimal totalAmount = catalogService.findProduct(productSku)
+                .map(product -> product.price().multiply(BigDecimal.valueOf(quantity)))
+                .orElse(BigDecimal.ZERO);
 
         Order order = new Order(customerEmail, productSku, quantity, totalAmount);
         return failOrder(order, reason);

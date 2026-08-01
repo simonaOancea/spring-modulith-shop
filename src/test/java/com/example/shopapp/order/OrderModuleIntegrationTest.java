@@ -42,6 +42,15 @@ class OrderModuleIntegrationTest {
     }
 
     @Test
+    void placingOrderForUnknownProductFailsCleanly() {
+        // Regression: getProduct throwing through CatalogService's @Transactional proxy used
+        // to mark fail()'s transaction rollback-only -> UnexpectedRollbackException -> 500.
+        OrderResult result = orderService.placeOrder("ghost@example.com", "NO-SUCH-SKU", 1);
+
+        assertThat(result.status()).isEqualTo("FAILED");
+    }
+
+    @Test
     void cancellingOrderReleasesStockAndPublishesEvent(Scenario scenario) {
         // Given: a product with stock and a completed order
         ProductInfo product = catalogService.registerProduct("Cancel Test", "CNC-001", new BigDecimal("49.99"), 10);
