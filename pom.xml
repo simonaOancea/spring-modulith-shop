@@ -134,6 +134,14 @@
             <optional>true</optional>
         </dependency>
 
+        <!-- Compile-time-only markers (@VisibleForTesting) — never ships in the jar -->
+        <dependency>
+            <groupId>org.jetbrains</groupId>
+            <artifactId>annotations</artifactId>
+            <version>26.0.2</version>
+            <scope>provided</scope>
+        </dependency>
+
         <!-- Test -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

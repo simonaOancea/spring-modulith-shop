@@ -4,6 +4,7 @@ import com.example.shopapp.fulfillment.ShipmentDispatched;
 import com.example.shopapp.fulfillment.ShipmentWithProduct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.VisibleForTesting;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,6 +32,11 @@ public class FulfillmentService {
                 shipment.getId(), shipment.getOrderId(), shipment.getCustomerEmail()));
     }
 
+    /**
+     * Observation window for the module tests — Scenario's andWaitForStateChange polls module
+     * state through it (the repository is package-private). No production callers by design.
+     */
+    @VisibleForTesting
     @Transactional(readOnly = true)
     public List<Shipment> getShipmentsByOrder(Long orderId) {
         return shipments.findByOrderId(orderId);
