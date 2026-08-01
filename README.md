@@ -32,6 +32,22 @@ order (depends on: catalog)
 - **Observability** — one traceId across all modules via Micrometer Tracing + OpenTelemetry; module spans visible in Jaeger
 - **Actuator** — `/actuator/modulith` for runtime module introspection
 
+### Cross-module data access — the full menu
+
+The same question — "one module needs another module's data" — has four possible answers,
+and this project demonstrates all of them, including the forbidden one:
+
+| # | Strategy | Example here | Coupling | Freshness |
+| --- | --- | --- | --- | --- |
+| 1 | Direct service call | order → `CatalogService.reserveStock(...)` | code + shared transaction | strong (same TX) |
+| 2 | Read-only DB view | fulfillment → `CatalogProductView` (`@Subselect`) | data only, zero code | live at query time |
+| 3 | Event-carried state | `OrderCompleted` carries sku, quantity, email | none — a fact arrived | snapshot at event time |
+| 0 | Cross-schema JOIN | the commented `revenue-report` | hidden data weld | blocked by the P6Spy guard |
+
+Pick by need: writes or same-transaction consistency → call. Reads without code coupling → view.
+Reacting to something that happened → the event already carries what you need. And the JOIN is
+what happens when nobody chooses — which is why the guard exists.
+
 ### External Integration
 
 - **HTTP Interface client** — Spring's declarative HTTP client (`@HttpExchange` + `@ImportHttpServices`) for the payment gateway
