@@ -25,8 +25,6 @@ class FulfillmentModuleIntegrationTest {
         // When: an OrderCompleted event is published
         scenario.publish(new OrderCompleted(1L, "TST-001", 2, new BigDecimal("199.98"), "customer@example.com"))
                 .andWaitForStateChange(() -> fulfillmentService.getShipmentsByOrder(1L))
-                .andVerify(shipments -> {
-                    assertThat(shipments).isNotEmpty();
-                });
+                .andVerify(shipments -> assertThat(shipments).isNotEmpty());
     }
 }

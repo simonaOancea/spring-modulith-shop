@@ -37,7 +37,7 @@ class OrderExternalizationTest {
     private KafkaContainer kafkaContainer;
 
     @Test
-    void orderCompletedEventIsExternalizedToKafka() throws Exception {
+    void orderCompletedEventIsExternalizedToKafka() {
         // Given: a product with stock
         ProductInfo product = catalogService.registerProduct("Kafka Test Product", "KFK-001", new BigDecimal("49.99"), 20);
 

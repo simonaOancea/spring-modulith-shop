@@ -40,9 +40,9 @@ order (depends on: catalog)
 ## Stack
 
 | Component | Version |
-|---|---|
-| Spring Boot | 4.0.5 |
-| Spring Modulith | 2.0.5 |
+| --- | --- |
+| Spring Boot | 4.0.7 |
+| Spring Modulith | 2.0.7 |
 | Java | 25 |
 | PostgreSQL | 16 |
 | Kafka | 7.6.0 (KRaft) |

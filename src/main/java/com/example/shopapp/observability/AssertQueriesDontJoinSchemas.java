@@ -13,7 +13,7 @@ import java.util.stream.Collectors;
  * The check runs BEFORE execution, so the offending statement never reaches Postgres.
  *
  * Honest punchline: a single-table read from a foreign schema (the fulfillment module's
- * @Subselect "SELECT ... FROM catalog.products") references ONE schema, so it slips through.
+ * {@code @Subselect} "SELECT ... FROM catalog.products") references ONE schema, so it slips through.
  * That is intentional — schema-per-module + a read-only @Subselect is a deliberate, decoupled
  * choice (data-decoupling Level 3). What we forbid is a query that *joins* across owned schemas,
  * because that silently welds two modules together at the data layer.

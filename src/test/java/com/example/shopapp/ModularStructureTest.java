@@ -6,7 +6,7 @@ import org.springframework.modulith.docs.Documenter;
 
 class ModularStructureTest {
 
-    ApplicationModules modules = ApplicationModules.of(ShopApplication.class);
+    static final ApplicationModules modules = ApplicationModules.of(ShopApplication.class);
 
     @Test
     void verifyModularStructure() {
