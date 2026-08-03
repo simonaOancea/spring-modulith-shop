@@ -3,7 +3,10 @@ package com.example.shopapp.notification.internal;
 import org.springframework.stereotype.Component;
 
 /**
- * DEMO: Uncomment the import and method below to watch Spring Modulith's verify() fail.
+ * DEMO: Uncomment the method below — select the commented lines and hit Cmd-/ — to watch
+ * Spring Modulith's verify() fail. The type is fully qualified on purpose: there is no import
+ * to move, so breaking the build and repairing it are one keystroke each. (Same shape as the
+ * cross-schema JOIN block in fulfillment/internal/FulfillmentReportController.)
  *
  * The notification module declares allowedDependencies = { "catalog", "order :: events" }.
  * That grants access to catalog's API and to order's "events" named interface only.
@@ -22,13 +25,8 @@ import org.springframework.stereotype.Component;
 @Component
 class BoundaryViolationExample {
 
-    // Uncomment the import (move it to the top of the file, with the other imports) and the
-    // method below to break the boundary verification test:
-    //
-    // import com.example.shopapp.fulfillment.internal.Shipment;
-    //
     // void violateBoundary() {
-    //     // Reaches into fulfillment's internal package — never declared, not allowed.
-    //     Shipment shipment = new Shipment();
+    //     com.example.shopapp.fulfillment.internal.Shipment shipment =
+    //             new com.example.shopapp.fulfillment.internal.Shipment();
     // }
 }
