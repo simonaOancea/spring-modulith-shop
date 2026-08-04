@@ -111,7 +111,7 @@ open http://localhost:16686
 **Inspect the transactional outbox:**
 ```bash
 docker compose exec postgres psql -U shopapp -d shopapp \
-  -c "SELECT event_type, listener_id, publication_date, completion_date FROM event_publication ORDER BY publication_date;"
+  -c "SELECT event_type, listener_id, status, publication_date, completion_date FROM event_publication ORDER BY publication_date;"
 ```
 
 **Watch the Kafka topic:**
