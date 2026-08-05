@@ -117,7 +117,8 @@ docker compose exec postgres psql -U shopapp -d shopapp \
 **Watch the Kafka topic:**
 ```bash
 docker compose exec kafka kafka-console-consumer \
-  --bootstrap-server localhost:9092 --topic order-completed --from-beginning
+  --bootstrap-server localhost:9092 --topic order-completed --from-beginning \
+  --property print.key=true --property print.partition=true
 ```
 
 **Outbox crash/recovery beat:**
