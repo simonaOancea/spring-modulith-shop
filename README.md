@@ -145,7 +145,11 @@ curl -s localhost:8080/api/fulfillment/revenue-report   # → 500, CrossSchemaJo
 ## Pre-stage checklist
 
 1. `docker compose down -v && docker compose up -d` — fresh schemas, outbox, topic.
-2. Comment out `@Externalized(...)` (+ its import) on `order/events/OrderCompleted` — it gets added back live in the Kafka beat. (The committed state keeps it so `OrderExternalizationTest` stays green.)
-3. `./mvnw -o -q test -Dtest=ModularStructureTest` — confirms green AND that the offline flag works (conference wifi!).
+2. Comment out `@Externalized(...)` on `order/events/OrderCompleted` — it gets added back live in the Kafka beat. (The committed state keeps it so `OrderExternalizationTest` stays green.) The import may stay: an unused import is a warning, not an error, and leaving it makes the live beat a single ⌘/.
+3. `./mvnw -o test -Dtest='ModularStructureTest#verifyModularStructure'` — confirms green AND that the offline flag works (conference wifi!). No `-q`: it suppresses the `Tests run:` / `BUILD SUCCESS` lines the beat narrates, while leaving the module dump on screen.
 4. Boot once with the demo profile, place one order, confirm the trace appears in Jaeger (localhost:16686).
-5. Confirm every break-glass block is commented: boundary violation (notification), cycle field + call (order), revenue report (fulfillment), `@Externalized`.
+5. Open the `outbox.sql` IntelliJ console tab — confirm it points at `shopapp` and run both statements: full history returns rows, incomplete-only returns none. Catches a missing tab, a wrong database and stale SQL in one go. The tab is an IDE scratch file, not repo content, so no git operation restores it; if it is gone, open a new query console on `shopapp` and paste both statements from the run sheet's `CONSOLE TAB` section.
+6. Confirm every break-glass block is commented: boundary violation (notification), cycle field + call (order), revenue report (fulfillment), `@Externalized`.
+7. **Once per conference trip, on hotel wifi:** one ONLINE `./mvnw clean verify` so every jar is cached and `-o` cannot miss anything.
+8. Identity furniture: terminal badge / status line set to **Simona Oancea · simonaoancea.com** (visible in every demo and recording); speaker slide loaded as the walk-on slide — name, site, credentials, **no talk title** (the title debuts in Act 7).
+9. Light kit: IDE, terminal and deck all run LIGHT themes on stage — Jaeger is light already, so nothing strobes at a switch, and light survives weak projectors. Bump IDE + terminal font sizes and verify back-row legibility (`Tests run: 1`, the 10-span trace).
