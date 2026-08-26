@@ -16,7 +16,12 @@ class CatalogController {
 
     private final CatalogService catalogService;
 
-    record RegisterProductRequest(String name, String sku, BigDecimal price, int initialStock) {}
+    record RegisterProductRequest(
+            String name,
+            String sku,
+            BigDecimal price,
+            int initialStock
+    ) {}
 
     @PostMapping
     ResponseEntity<ProductInfo> registerProduct(@RequestBody RegisterProductRequest request) {
