@@ -30,7 +30,7 @@ public class OrderProcessor {
     // verify() then reports a CYCLE — order -> notification -> order — because notification
     // already listens to order :: events. The fix is deleting the sync call again: the
     // OrderCompleted event published below drives the same confirmation, in one direction.
-    // private final com.example.shopapp.notification.NotificationService notificationService;
+    //private final com.example.shopapp.notification.NotificationService notificationService;
 
     @Transactional
     public OrderResult execute(String customerEmail, String productSku, int quantity) {
