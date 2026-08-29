@@ -25,8 +25,8 @@ import org.springframework.stereotype.Component;
 @Component
 class BoundaryViolationExample {
 
-    // void violateBoundary() {
-    //     com.example.shopapp.fulfillment.internal.Shipment shipment =
-    //             new com.example.shopapp.fulfillment.internal.Shipment();
-    // }
+//     void violateBoundary() {
+//         com.example.shopapp.fulfillment.internal.Shipment shipment =
+//                 new com.example.shopapp.fulfillment.internal.Shipment();
+//     }
 }
