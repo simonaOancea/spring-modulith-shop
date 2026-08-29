@@ -144,7 +144,7 @@ curl -s localhost:8080/api/fulfillment/revenue-report   # → 500, CrossSchemaJo
 
 ## Pre-stage checklist
 
-0. **Four IntelliJ terminal tabs, renamed** so grabbing the wrong one is impossible: `1-commands`, `2-app`, `3-kafka`, `4-db`. All four must sit in the repo root — the DB snippets use relative paths. Console font at projector size (Settings → Editor → Color Scheme → Console Font); terminal buffer limit raised. Clear-log is right-click → Clear Buffer — **⌘K is Commit, never on stage.**
+0. **Four IntelliJ terminal tabs, renamed** so grabbing the wrong one is impossible: `1-commands`, `2-app`, `3-kafka`, `4-db`. All four must sit in the repo root — the DB snippets use relative paths. Console font at projector size (Settings → Editor → Color Scheme → Console Font); terminal buffer limit raised. Clear-log is **⌘K** (verified 2026-08-29 on this machine; it is also IntelliJ's Commit shortcut, so re-check after an IDE or keymap change — right-click → Clear Buffer is the fallback).
 1. `docker compose down -v && docker compose up -d` — fresh schemas, outbox, topic.
 2. Comment out `@Externalized(...)` on `order/events/OrderCompleted` — it gets added back live in the Kafka beat. (The committed state keeps it so `OrderExternalizationTest` stays green.) The import may stay: an unused import is a warning, not an error, and leaving it makes the live beat a single ⌘/.
 3. `./mvnw -o test -Dtest='ModularStructureTest#verifyModularStructure'` — confirms green AND that the offline flag works (conference wifi!). No `-q`: it suppresses the `Tests run:` / `BUILD SUCCESS` lines the beat narrates, while leaving the module dump on screen.
