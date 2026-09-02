@@ -1,4 +1,4 @@
-package com.example.shopapp.observability;
+package com.example.shopapp.guards;
 
 import com.p6spy.engine.common.StatementInformation;
 import com.p6spy.engine.event.SimpleJdbcEventListener;

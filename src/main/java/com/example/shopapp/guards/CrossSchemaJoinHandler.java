@@ -1,6 +1,6 @@
-package com.example.shopapp.observability;
+package com.example.shopapp.guards;
 
-import com.example.shopapp.observability.AssertQueriesDontJoinSchemas.CrossSchemaJoinException;
+import com.example.shopapp.guards.AssertQueriesDontJoinSchemas.CrossSchemaJoinException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
