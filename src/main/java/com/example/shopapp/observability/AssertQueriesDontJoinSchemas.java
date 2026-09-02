@@ -61,8 +61,16 @@ public final class AssertQueriesDontJoinSchemas extends SimpleJdbcEventListener 
     /** Thrown when one statement references more than one module schema (a cross-schema join). */
     public static final class CrossSchemaJoinException extends RuntimeException {
 
+        private final String schemas;
+
         CrossSchemaJoinException(Set<String> schemas, String sql) {
             super(message(schemas, sql));
+            this.schemas = schemas.stream().sorted().collect(Collectors.joining(", "));
+        }
+
+        /** The module schemas the statement touched, sorted, comma-separated. */
+        public String schemas() {
+            return schemas;
         }
 
         private static String message(Set<String> schemas, String sql) {
