@@ -22,8 +22,10 @@ class FulfillmentModuleIntegrationTest {
 
     @Test
     void orderCompletedCreatesShipment(Scenario scenario) {
-        // When: an OrderCompleted event is published
-        scenario.publish(new OrderCompleted(1L, "TST-001", 2, new BigDecimal("199.98"), "customer@example.com"))
+        var orderCompleted = new OrderCompleted(
+                1L, "TST-001", 2, new BigDecimal("199.98"), "customer@example.com");
+
+        scenario.publish(orderCompleted)
                 .andWaitForStateChange(() -> fulfillmentService.getShipmentsByOrder(1L))
                 .andVerify(shipments -> assertThat(shipments).isNotEmpty());
     }

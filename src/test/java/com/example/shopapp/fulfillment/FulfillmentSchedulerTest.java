@@ -30,8 +30,11 @@ class FulfillmentSchedulerTest {
 
     @Test
     void dayHasPassedTriggersShipmentDispatch(Scenario scenario) {
-        // Given: an order has been completed (creates a pending shipment via FulfillmentProcessor)
-        scenario.publish(new OrderCompleted(1L, "TST-001", 2, new BigDecimal("199.98"), "alice@example.com"))
+        // Given: a completed order, so a pending shipment exists
+        var orderCompleted = new OrderCompleted(
+                1L, "TST-001", 2, new BigDecimal("199.98"), "alice@example.com");
+
+        scenario.publish(orderCompleted)
                 .andWaitForStateChange(() -> fulfillmentService.getShipmentsByOrder(1L))
                 .andVerify(shipments -> assertThat(shipments).isNotEmpty());
 
