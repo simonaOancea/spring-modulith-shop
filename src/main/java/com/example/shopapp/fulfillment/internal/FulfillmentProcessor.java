@@ -18,11 +18,15 @@ class FulfillmentProcessor {
     private final FulfillmentProperties demoProperties;
 
     // Outbox delivery is at-least-once: a crash between this listener's commit and the
-    // publication's completion mark redelivers the event. A production listener would be
-    // idempotent — e.g. first line: skip if a shipment for this orderId already exists.
-    // Left naive here to keep the demo beat legible; the gap is discussed in the talk.
+    // publication's completion mark redelivers the event. So the listener is idempotent —
+    // a redelivered OrderCompleted must not create a second shipment.
     @ApplicationModuleListener
     void on(OrderCompleted event) {
+        if (!shipments.findByOrderId(event.orderId()).isEmpty()) {
+            log.info("Shipment for order #{} already exists — redelivery ignored", event.orderId());
+            return;
+        }
+
         if (demoProperties.shouldFailNow()) {
             log.warn("DEMO: failing OrderCompleted listener for order #{} — its outbox row stays incomplete", event.orderId());
             throw new IllegalStateException("Simulated fulfillment failure for outbox demo (order #" + event.orderId() + ")");
