@@ -65,7 +65,9 @@ public final class AssertQueriesDontJoinSchemas extends SimpleJdbcEventListener 
 
         CrossSchemaJoinException(Set<String> schemas, String sql) {
             super(message(schemas, sql));
-            this.schemas = schemas.stream().sorted().collect(Collectors.joining(", "));
+            this.schemas = schemas.stream()
+                    .sorted()
+                    .collect(Collectors.joining(", "));
         }
 
         /** The module schemas the statement touched, sorted, comma-separated. */

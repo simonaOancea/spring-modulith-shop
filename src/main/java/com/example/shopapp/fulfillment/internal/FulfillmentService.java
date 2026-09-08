@@ -9,6 +9,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
@@ -49,11 +50,13 @@ public class FulfillmentService {
         return orderShipments.stream()
                 .map(shipment -> {
                     Optional<CatalogProductView> product = catalogProductViews.findBySku(shipment.getProductSku());
+                    String productName = product.map(CatalogProductView::getName)
+                            .orElse("Unknown");
+                    BigDecimal price = product.map(CatalogProductView::getPrice)
+                            .orElse(null);
                     return new ShipmentWithProduct(
                             shipment.getId(), shipment.getOrderId(), shipment.getProductSku(),
-                            product.map(CatalogProductView::getName).orElse("Unknown"),
-                            product.map(CatalogProductView::getPrice).orElse(null),
-                            shipment.getQuantity(), shipment.getStatus().name());
+                            productName, price, shipment.getQuantity(), shipment.getStatus().name());
                 })
                 .toList();
     }
