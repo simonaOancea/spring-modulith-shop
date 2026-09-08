@@ -64,10 +64,13 @@ public final class AssertQueriesDontJoinSchemas extends SimpleJdbcEventListener 
         private final String schemas;
 
         CrossSchemaJoinException(Set<String> schemas, String sql) {
-            super(message(schemas, sql));
-            this.schemas = schemas.stream()
-                    .sorted()
-                    .collect(Collectors.joining(", "));
+            this(join(schemas), sql);
+        }
+
+        private CrossSchemaJoinException(String schemas, String sql) {
+            super("Cross-schema JOIN detected — one query touches module schemas " + schemas
+                    + ". That couples those modules at the data layer. Offending SQL: " + sql);
+            this.schemas = schemas;
         }
 
         /** The module schemas the statement touched, sorted, comma-separated. */
@@ -75,12 +78,10 @@ public final class AssertQueriesDontJoinSchemas extends SimpleJdbcEventListener 
             return schemas;
         }
 
-        private static String message(Set<String> schemas, String sql) {
-            String joined = schemas.stream()
+        private static String join(Set<String> schemas) {
+            return schemas.stream()
                     .sorted()
                     .collect(Collectors.joining(", "));
-            return "Cross-schema JOIN detected — one query touches module schemas " + joined
-                    + ". That couples those modules at the data layer. Offending SQL: " + sql;
         }
     }
 }
