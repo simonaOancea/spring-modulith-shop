@@ -1,8 +1,8 @@
 # Spring Modulith Shop
 
 Demo project for the tech talk **"The Architecture Decision You Can Undo"** — a modular monolith e-commerce application built with Spring Modulith.
-**Slides:** [The Architecture Decision You Can Undo (PDF)](https://github.com/simonaOancea/spring-modulith-shop/releases/latest/download/slides.pdf) — the talk this repo is the live demo for.
 
+**Slides:** [The Architecture Decision You Can Undo (PDF)](https://github.com/simonaOancea/spring-modulith-shop/releases/latest/download/slides.pdf) — the talk this repo is the live demo for.
 
 ## What This Demonstrates
 
