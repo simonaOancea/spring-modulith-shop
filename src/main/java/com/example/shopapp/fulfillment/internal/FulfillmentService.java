@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -47,12 +48,12 @@ public class FulfillmentService {
         List<Shipment> orderShipments = shipments.findByOrderId(orderId);
         return orderShipments.stream()
                 .map(shipment -> {
-                    String productName = catalogProductViews.findBySku(shipment.getProductSku())
-                            .map(CatalogProductView::getName)
-                            .orElse("Unknown");
+                    Optional<CatalogProductView> product = catalogProductViews.findBySku(shipment.getProductSku());
                     return new ShipmentWithProduct(
                             shipment.getId(), shipment.getOrderId(), shipment.getProductSku(),
-                            productName, shipment.getQuantity(), shipment.getStatus().name());
+                            product.map(CatalogProductView::getName).orElse("Unknown"),
+                            product.map(CatalogProductView::getPrice).orElse(null),
+                            shipment.getQuantity(), shipment.getStatus().name());
                 })
                 .toList();
     }
