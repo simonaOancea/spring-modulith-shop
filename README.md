@@ -103,57 +103,141 @@ curl -s localhost:8080/actuator/modulith | jq
 open http://localhost:16686
 ```
 
-## Demo crib sheet
+## Walk the talk's demos yourself
 
-**Boundary check (fast, offline, no DB):**
+The talk breaks five things and puts every one of them back. Here they are in talk order,
+each with the change to make, what you'll see, and the undo. Start with the app running
+(`docker compose up -d`, then `./mvnw spring-boot:run -Dspring-boot.run.profiles=demo`) and
+keep a second terminal for the commands.
+
+The three outbox queries live in `sql/`. The `PGTZ` flag makes their `done` column show your
+local time instead of the container's UTC — replace the `$(…)` with a zone name such as
+`Europe/Berlin` if your OS has no `/etc/localtime` link.
+
 ```bash
-./mvnw -o -q test -Dtest=ModularStructureTest
+OUTBOX='docker compose exec -T -e PGTZ="$(readlink /etc/localtime | sed "s|.*zoneinfo/||")" postgres psql -U shopapp -d shopapp -P null=NULL -P border=2 -f -'
 ```
 
-**Inspect the transactional outbox:**
+### 1. Break a boundary
+
+The structure test is the boundary. Green first:
+
 ```bash
-docker compose exec postgres psql -U shopapp -d shopapp \
-  -c "SELECT event_type, listener_id, status, publication_date, completion_date FROM event_publication ORDER BY publication_date;"
+./mvnw test -Dtest=ModularStructureTest
 ```
 
-**Watch the Kafka topic:**
-```bash
-docker compose exec kafka kafka-console-consumer \
-  --bootstrap-server localhost:9092 --topic order-completed --from-beginning \
-  --property print.key=true --property print.partition=true
+Now uncomment `violateBoundary()` in `notification/internal/BoundaryViolationExample.java`
+(the type is fully qualified, so there is no import to add) and run the test again. It fails
+with an *illegal dependency*: notification reaches into fulfillment's internals, which its
+`package-info.java` never allowed:
+
+```
+Module 'notification' depends on module 'fulfillment' via …BoundaryViolationExample -> …Shipment.
+Allowed targets: catalog, order :: events.
 ```
 
-**Outbox crash/recovery beat:**
+**Undo:** comment the method out again. Green.
+
+### 2. Events you can trust — the outbox
+
+Place an order and look at the outbox. Every listener of every event gets its own row, and a
+row is only written when the order itself is committed — same transaction, never one without
+the other:
+
 ```bash
-# 1. arm the one-shot listener failure, place an order, watch the WARN, then Ctrl-C the app
+curl -s -X POST localhost:8080/api/orders -H 'Content-Type: application/json' \
+  -d '{"customerEmail":"alice@example.com","productSku":"LAP-001","quantity":1}'
+sh -c "$OUTBOX" < sql/outbox-full.sql
+```
+
+Now make a listener die. Restart the app with the one-shot failure flag, place another
+order, and watch the fulfillment listener throw once:
+
+```bash
 ./mvnw spring-boot:run -Dspring-boot.run.profiles=demo \
   -Dspring-boot.run.arguments=--demo.fulfillment.fail-once=true
-# 2. restart WITHOUT the flag — the incomplete publication is redelivered and completes
-./mvnw spring-boot:run -Dspring-boot.run.profiles=demo
 ```
 
-**Cross-schema guard beat:** uncomment the revenue-report block in
-`fulfillment/internal/FulfillmentReportController`, restart, then:
 ```bash
-curl -s localhost:8080/api/fulfillment/revenue-report   # → 500, CrossSchemaJoinException
+sh -c "$OUTBOX" < sql/outbox-undone.sql     # fulfillment's row: status FAILED, done NULL
 ```
 
-**Cycle beat:** uncomment the `notificationService` field + call in
-`order/internal/OrderProcessor` and set `order/package-info.java` to
-`allowedDependencies = { "catalog", "notification" }`, then run the boundary check —
-`verify()` reports the cycle. Resolve by deleting the sync call again: the
-`OrderCompleted` event already drives the same notification, in one direction.
+Ctrl-C the app and start it again **without** the flag. On boot, Spring Modulith republishes
+every incomplete row: the log prints `Shipment created for order #N`, and the same query now
+returns nothing. No broker was involved — a database row and a restart.
 
-## Pre-stage checklist
+Delivery is at-least-once, so listeners are idempotent (see `FulfillmentProcessor`: check
+before you insert).
 
-0. **Four IntelliJ terminal tabs, renamed** so grabbing the wrong one is impossible: `1-commands`, `2-app`, `3-kafka`, `4-db`. All four must sit in the repo root — the DB snippets use relative paths. Console font at projector size (Settings → Editor → Color Scheme → Console Font); terminal buffer limit raised. Clear-log is **⌘K** (verified 2026-08-29 on this machine; it is also IntelliJ's Commit shortcut, so re-check after an IDE or keymap change — right-click → Clear Buffer is the fallback).
-1. `docker compose down -v && docker compose up -d` — fresh schemas, outbox, topic.
-2. Comment out `@Externalized(...)` on `order/events/OrderCompleted` — it gets added back live in the Kafka beat. (The committed state keeps it so `OrderExternalizationTest` stays green.) The import may stay: an unused import is a warning, not an error, and leaving it makes the live beat a single ⌘/.
-3. `./mvnw -o test -Dtest='ModularStructureTest#verifyModularStructure'` — confirms green AND that the offline flag works (conference wifi!). No `-q`: it suppresses the `Tests run:` / `BUILD SUCCESS` lines the beat narrates, while leaving the module dump on screen.
-4. Boot the app in `2-app` with the demo profile, place one order, confirm the trace appears in Jaeger (localhost:16686). **The boot must happen before step 5** — see the ordering warning there.
-5. **Start the Kafka consumer in `3-kafka` — `;consumer` — and only now.** The order is reset → boot → consumer, and the boot is not optional. `;reset` wipes the Kafka volumes, so `order-completed` is gone; the app's `NewTopic` bean recreates it **with 3 partitions** at startup. Start the consumer first and the broker auto-creates the topic itself with **1** partition (no `KAFKA_NUM_PARTITIONS` in `docker-compose.yml`), every message then prints `Partition:0` regardless of key, and the per-product-routing point in the Kafka beat is dead. You also get a `UNKNOWN_TOPIC_OR_PARTITION` warning sitting in a terminal that is supposed to be visibly empty all talk. Verify: `docker compose exec kafka kafka-topics --bootstrap-server localhost:9092 --describe --topic order-completed` → `PartitionCount: 3`.
-6. In `4-db`, run `;outbox` and `;undone` — full history returns rows, unfinished returns none. Catches a wrong directory, a wrong database and stale SQL in one go. The three statements are repo content now (`sql/outbox-*.sql`), so git restores them; the four keywords are `;outbox`, `;undone`, `;newest` and `;psql` (interactive, exit with Ctrl-D). **`-P null=NULL` is not optional** — the crash-recovery beat points at a NULL and psql prints blank without it.
-7. Confirm every break-glass block is commented: boundary violation (notification), cycle field + call (order), revenue report (fulfillment), `@Externalized`.
-8. **Once per conference trip, on hotel wifi:** one ONLINE `./mvnw clean verify` so every jar is cached and `-o` cannot miss anything.
-9. Identity furniture: terminal badge / status line set to **Simona Oancea · simonaoancea.com** (visible in every demo and recording); speaker slide loaded as the walk-on slide — name, site, credentials, **no talk title** (the title debuts in Act 7).
-10. Light kit: IDE, terminal and deck all run LIGHT themes on stage — Jaeger is light already, so nothing strobes at a switch, and light survives weak projectors. Bump IDE + terminal font sizes and verify back-row legibility (`Tests run: 1`, the 10-span trace, the 62-character outbox table).
+### 3. Build a cycle
+
+Events don't make dependencies disappear — a listener that names `OrderCompleted` depends on
+the order module. Close the loop by calling back the other way: in
+`order/internal/OrderProcessor.java` uncomment the `notificationService` field and the call
+after `order.complete()`, and in `order/package-info.java` widen the declaration to
+`allowedDependencies = { "catalog", "notification" }`. Everything is declared on both sides,
+and the structure test still fails:
+
+```
+Cycle detected: Slice notification -> Slice order -> Slice notification
+```
+
+**Undo:** re-comment the field and the call, restore `{ "catalog" }`. The event already drives
+the same notification, in one direction.
+
+### 4. Read the data, not the code — then kill a join
+
+Fulfillment's report shows product names and prices, yet fulfillment imports nothing from
+catalog. It reads `catalog.products` through `CatalogProductView`, a read-only `@Subselect`
+entity — data coupling written down in one place, findable with one search for the table name:
+
+```bash
+curl -s localhost:8080/api/fulfillment/orders/1/report | jq     # any completed order id
+```
+
+That single-schema read is allowed on purpose. What the guard kills is a statement that
+touches two or more module schemas. Uncomment the `revenue-report` block in
+`fulfillment/internal/FulfillmentReportController.java`, restart, and call it:
+
+```bash
+curl -s localhost:8080/api/fulfillment/revenue-report
+# {"status":500,"error":"cross-schema join rejected","schemas":"catalog, fulfillment, orders"}
+```
+
+The query never reached Postgres. `guards/AssertQueriesDontJoinSchemas` sits in the JDBC
+driver (P6Spy, demo profile), reads the SQL before it runs, and rejects it — the coupling
+`ApplicationModules.verify()` cannot see, because there is no import to catch. It is a
+teaching device; GitHub ran the production version of the idea (schema domains plus a query
+linter) for years before splitting their database.
+
+**Undo:** re-comment the block.
+
+### 5. Leave the process
+
+`OrderCompleted` carries `@Externalized("order-completed::#{#this.productSku()}")`: the part
+before `::` is the topic, the rest makes the SKU the message key, so events for one product
+stay in order on one partition. Watch it arrive — start the consumer **after** the app has
+booted once, so the topic exists with its three partitions:
+
+```bash
+docker compose exec kafka kafka-console-consumer --bootstrap-server localhost:9092 \
+  --topic order-completed --from-beginning --property print.key=true --property print.partition=true
+```
+
+Place an order; the consumer prints the event with key `LAP-001`. Then look at the outbox
+newest-first: Kafka is just one more listener in that table, with the same guarantees —
+broker down means an incomplete row, republished on restart:
+
+```bash
+sh -c "$OUTBOX" < sql/outbox-newest.sql
+```
+
+**Undo:** comment the annotation out and restart. The in-process listeners keep working;
+nothing leaves the JVM. That is the first of the four extraction steps in the talk, and the
+one that costs a single line.
+
+### Reset
+
+```bash
+docker compose down -v && docker compose up -d     # fresh schemas, empty outbox, new topic
+```
