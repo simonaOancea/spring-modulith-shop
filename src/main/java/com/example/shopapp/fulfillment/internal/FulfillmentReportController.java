@@ -42,7 +42,7 @@ class FulfillmentReportController {
     //
     // @org.springframework.transaction.annotation.Transactional(readOnly = true)
     // @GetMapping("/revenue-report")
-    // java.util.List<Object[]> shipmentRevenueReport() {
+    // java.util.List<?> shipmentRevenueReport() {
     //     return entityManager.createNativeQuery("""
     //             SELECT s.id, s.product_sku, p.name, o.total_amount
     //             FROM fulfillment.shipments s
