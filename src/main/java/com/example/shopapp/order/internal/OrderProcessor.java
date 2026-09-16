@@ -46,7 +46,6 @@ public class OrderProcessor {
         // Reserve stock — throws if insufficient
         catalogService.reserveStock(productSku, quantity);
 
-        // Charge payment via external gateway
         try {
             PaymentResponse payment = paymentGateway.charge(
                     new PaymentRequest(order.getId().toString(), customerEmail, totalAmount));
@@ -85,7 +84,6 @@ public class OrderProcessor {
         return failOrder(order, reason);
     }
 
-    // Shared failure tail: mark FAILED, log, publish OrderFailed, return the result.
     // Callers release reserved stock themselves — only the payment branches have anything
     // to compensate; after a rollback (OrderService -> fail) there is nothing to release.
     private OrderResult failOrder(Order order, String reason) {
@@ -107,7 +105,6 @@ public class OrderProcessor {
         order.cancel();
         orders.save(order);
 
-        // Release the reserved stock back to catalog
         catalogService.releaseStock(order.getProductSku(), order.getQuantity());
 
         log.info("Order #{} cancelled, released {} x{}", orderId, order.getProductSku(), order.getQuantity());

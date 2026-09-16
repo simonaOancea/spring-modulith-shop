@@ -56,7 +56,7 @@ class EventPublicationTest {
                     .doesNotContainNull();
         });
 
-        // The printed table doubles as the A3a fallback capture
+        // The printed table doubles as the talk's fallback capture
         List<Map<String, Object>> publications = publicationsFor(order.orderId());
         System.out.println("\n=== EVENT_PUBLICATION TABLE ===");
         publications.forEach(row -> System.out.printf("  %-45s | listener=%-60s | completed=%s%n",
